@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AVTclub Scanner</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: var(--tg-theme-bg-color, #1a1a2e); color: var(--tg-theme-text-color, #fff); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+  h1 { font-size: 18px; margin-bottom: 6px; }
+  p.sub { font-size: 13px; color: #aaa; margin-bottom: 16px; }
+  #reader { width: 100%; max-width: 320px; border-radius: 12px; overflow: hidden; border: 2px solid #444; }
+  #result { margin-top: 20px; padding: 14px 18px; background: #2a2a3e; border-radius: 10px; width: 100%; max-width: 320px; display: none; }
+  #result .label { font-size: 11px; color: #aaa; margin-bottom: 4px; }
+  #result .sku { font-size: 20px; font-weight: bold; font-family: monospace; color: #4fc3f7; }
+  #send-btn { margin-top: 12px; width: 100%; max-width: 320px; padding: 14px; background: #4fc3f7; color: #000; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; display: none; }
+  #status { font-size: 12px; color: #888; margin-top: 10px; }
+</style>
+</head>
+<body>
+<h1>📷 Сканер AVTclub</h1>
+<p class="sub">Наведи камеру на QR-код деталі</p>
+<div id="reader"></div>
+<div id="result">
+  <div class="label">Відскановано:</div>
+  <div class="sku" id="scanned-sku"></div>
+</div>
+<button id="send-btn" onclick="sendToBot()">✅ Відправити в бот</button>
+<div id="status"></div>
+<script>
+  const tg = window.Telegram.WebApp;
+  tg.ready();
+  tg.expand();
+  let scannedValue = null;
+  let scanner = null;
+  function onScanSuccess(decodedText) {
+    if (scannedValue === decodedText) return;
+    scannedValue = decodedText;
+    document.getElementById('scanned-sku').textContent = decodedText;
+    document.getElementById('result').style.display = 'block';
+    document.getElementById('send-btn').style.display = 'block';
+    if (navigator.vibrate) navigator.vibrate(100);
+    if (scanner) scanner.stop();
+  }
+  function sendToBot() {
+    if (!scannedValue) return;
+    tg.sendData(scannedValue);
+  }
+  scanner = new Html5Qrcode("reader");
+  scanner.start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: { width: 250, height: 250 } },
+    onScanSuccess,
+    () => {}
+  ).catch(err => {
+    document.getElementById('status').textContent = '⚠️ ' + err;
+  });
+</script>
+</body>
+</html>
